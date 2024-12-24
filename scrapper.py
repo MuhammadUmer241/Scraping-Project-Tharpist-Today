@@ -4,6 +4,7 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
 import re
 from bs4 import BeautifulSoup
 import time
@@ -19,38 +20,19 @@ class Scrapper:
     def __init__(self,url = "https://www.psychologytoday.com/us/therapists?search=ontario"):
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
         self.driver.get(url)
-        self.driver.implicitly_wait(10)
+        self.driver.implicitly_wait(5)
         self.driver.maximize_window()
 
-    def crawl_page(self):
+    def scroll_down(self):
         """
-            Crawls through profile links on a webpage, extracts relevant information from each profile,
-            and prints the extracted data.
-            It only scrape the data from visible one page you need to add functionality to switch profile in order
-            to scrape more
+        Simulates pressing the "Page Down" key multiple times to ensure all content is loaded.
+        """
+        for _ in range(5):  # Adjust the range depending on the length of the content
+            self.driver.find_element(By.ID, "profileContainer").send_keys(Keys.PAGE_DOWN)
+            time.sleep(1)  # Allow time for lazy-loaded content
 
-            This method performs the following steps:
-            1. Finds all profile links by their class name (`profile-title`).
-            2. For each profile link:
-                - Clicks the link to navigate to the profile page.
-                - Extracts and prints the URL of the profile.
-                - Extracts and prints the profile title, suffix, and address by parsing the inner HTML of the profile's content section.
-                - Extracts and prints the paragraph text from a specific section.
-                - Extracts and prints the phone number from the `tel:` link (if available).
-                - Closes the profile page after extraction.
 
-            The method uses Selenium for web scraping and BeautifulSoup to parse HTML content.
-
-            Attributes:
-                self.driver: A Selenium WebDriver instance used to interact with the web page.
-
-            Returns:
-                None. Prints the extracted data to the console.
-
-            Example:
-                crawler = scrapper()
-                crawler.crawl()
-            """
+    def crawl_page(self):
 
         profile_links = self.driver.find_elements(By.CLASS_NAME, 'profile-title')
 
@@ -62,151 +44,209 @@ class Scrapper:
             print(f"Found {len(elements)} elements with class 'profile-heading-content'")
 
             # WebDriverWait(self.driver, 20).until(
-            #     EC.presence_of_element_located((By.CSS_SELECTOR, 'div.modal-container .profile-heading-content'))
+            #     EC.presence_of_element_located((By.CSS_SELECTOR, 'div.profile-heading-title h1.profile-title'))
             # )
 
+            # Wait briefly to ensure the modal closes before clicking the next profile
+            # time.sleep(5)
+
+            # Scroll down the modal/pop-up to ensure all elements are loaded
+            self.scroll_down()
 
             # Extract data from the modal/popup
             self.extract_profile_data()
 
             # Close the modal/popup after extracting the data
-            close_button = WebDriverWait(self.driver, 10).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.details-nav.details-close .icon-close'))
+            close_button = WebDriverWait(self.driver, 2).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div.details-close .icon-close"))
             )
+
             close_button.click()
 
             # Wait briefly to ensure the modal closes before clicking the next profile
-            # time.sleep(2)
+            # time.sleep(1)
 
     def extract_profile_data(self):
         """
         Extracts and prints the data from an open profile modal/popup.
         """
         try:
-            # Extract main content from the modal
-
-
-            div_element = self.driver.find_element(By.CLASS_NAME, "profile-heading-content")
-            inner_html = div_element.get_attribute("innerHTML")
-            soup = BeautifulSoup(inner_html, 'html.parser')
-
-            # Extract the desired text
-            profile_title = soup.find("h1", class_="profile-title").get_text(strip=True)
-            profile_suffix = soup.find("h2", class_="profile-suffix-heading").get_text(strip=True)
-            address = soup.find("span", class_="address-region").get_text(strip=True)
-
+            # Full Name
+            profile_title = self.driver.find_element(By.CLASS_NAME, 'profile-title').text.strip()
             print("Profile Title:", profile_title)
+
+            # Credentials/Titles
+            profile_suffix = self.driver.find_element(By.CLASS_NAME, "profile-suffix-heading").text.strip()
             print("Profile Suffix:", profile_suffix)
-            print("Address:", address)
+
+            # Profile Photo URL
+            profile_photo_element = self.driver.find_element(By.CLASS_NAME, "profile-photo")
+            profile_photo_url = profile_photo_element.get_attribute("src") if profile_photo_element else "No Photo URL"
+            print("Profile Photo URL:", profile_photo_url)
+
+            # Psychology Today Profile URL
+            profile_url = self.driver.current_url
+            print("Profile URL:", profile_url)
+
+            # License Number and Jurisdiction
+            license_info_element = self.driver.find_element(By.CLASS_NAME, "primary-details")
+            license_info = license_info_element.text.strip() if license_info_element else "No License Info"
+            print("License Info:", license_info)
+
+            # Verification Status
+            try:
+                verification_status_element = WebDriverWait(self.driver, 3).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, "verified-badge"))
+                )
+                verification_status = verification_status_element.text.strip()
+            except:
+                verification_status = "Not Verified"
+            print("Verification Status:", verification_status)
+
+            # Office Locations (All)
+            try:
+                office_locations = []
+                address_elements = self.driver.find_elements(By.CLASS_NAME, "address-line")
+                for elem in address_elements:
+                    office_locations.append(elem.text.strip())
+            except:
+                office_locations = ["No Address Found"]
+            print("Office Locations:", office_locations)
+            
+            # Scroll again if necessary to ensure all content is captured
+            # self.scroll_down()
+
+            # Virtual Session Availability
+            try:
+                availability_element = self.driver.find_element(By.CLASS_NAME, "at-a-glance_row--appointments-all")
+                availability = availability_element.text.strip()
+            except:
+                availability = "No Availability Info"
+            print("Virtual Session Availability:", availability)
+
+            # Service Areas
+            try:
+                service_areas = []
+                service_area_elements = self.driver.find_elements(By.CLASS_NAME, "nearby-areas .area-level")
+                for elem in service_area_elements:
+                    service_areas.append(elem.text.strip())
+            except:
+                service_areas = ["No Service Areas Found"]
+            print("Service Areas:", service_areas)
+
+            # Postal Codes Served
+            try:
+                postal_codes = []
+                postal_code_elements = self.driver.find_elements(By.CSS_SELECTOR, ".nearby-areas .area-title")
+                for elem in postal_code_elements:
+                    postal_codes.append(elem.text.strip())
+            except:
+                postal_codes = ["No Postal Codes Found"]
+            print("Postal Codes:", postal_codes)
+
+            # Session Fees/Pricing
+            try:
+                fees_element = self.driver.find_element(By.CLASS_NAME, "fees")
+                fees = fees_element.text.strip()
+            except:
+                fees = "No Session Fees Found"
+            print("Session Fees:", fees)
+
+            # Insurance Details
+            try:
+                insurance_element = self.driver.find_element(By.CLASS_NAME, "insurance")
+                insurance_details = insurance_element.text.strip()
+            except:
+                insurance_details = "No Insurance Info"
+            print("Insurance Details:", insurance_details)
+
+            # Payment Methods
+            try:
+                payment_element = self.driver.find_element(By.CSS_SELECTOR, "[data-x='payment-methods']")
+                payment_methods = payment_element.text.strip()
+            except:
+                payment_methods = "No Payment Methods Found"
+            print("Payment Methods:", payment_methods)
+
+            # Types of Sessions Offered
+            try:
+                types_of_sessions = []
+                session_elements = self.driver.find_elements(By.CSS_SELECTOR, ".client-focus-description")
+                for elem in session_elements:
+                    types_of_sessions.append(elem.text.strip())
+            except:
+                types_of_sessions = ["No Types of Sessions Found"]
+            print("Types of Sessions Offered:", types_of_sessions)
+
+            # Specialties
+            try:
+                attribute_elements = self.driver.find_elements(By.CSS_SELECTOR, ".attribute_base")
+                all_attributes = [elem.text.strip() for elem in attribute_elements]
+            except:
+                all_attributes = []
+            print("Extracted Attributes:", all_attributes)
+
+            # print("Specialties:", specialties)
+
+            # Treatment Approaches/Modalities
+            try:
+                treatment_approaches = []
+                approach_elements = self.driver.find_elements(By.CSS_SELECTOR, ".treatment-approach-attributes-section .attribute_base")
+                for elem in approach_elements:
+                    treatment_approaches.append(elem.text.strip())
+            except:
+                treatment_approaches = ["No Treatment Approaches Found"]
+            print("Treatment Approaches:", treatment_approaches)
+
+            # Client Focus (Ages, Groups)
+            try:
+                client_focus = []
+                client_focus_elements = self.driver.find_elements(By.CLASS_NAME, "client-focus-description")
+                for elem in client_focus_elements:
+                    client_focus.append(elem.text.strip())
+            except:
+                client_focus = ["No Client Focus Found"]
+            print("Client Focus:", client_focus)
+
+            # Languages Offered
+            try:
+                languages = []
+                language_elements = self.driver.find_elements(By.CLASS_NAME, "languages-offered")
+                for elem in language_elements:
+                    languages.append(elem.text.strip())
+            except:
+                languages = ["No Languages Found"]
+            print("Languages Offered:", languages)
+
+            # Qualifications and Educational Background
+            try:
+                qualifications_element = self.driver.find_element(By.CLASS_NAME, "qualifications")
+                qualifications = qualifications_element.text.strip()
+            except:
+                qualifications = "No Qualifications Found"
+            print("Qualifications:", qualifications)
+
+            # Main Profile Description
+            try:
+                paragraph_element = self.driver.find_element(By.CLASS_NAME, "paragraph")
+                paragraph_text = paragraph_element.text.strip()
+            except:
+                paragraph_text = "No Paragraph Found"
+            print("Main Profile Description:", paragraph_text)
+
+            # Specialized Sections/Boxes
+            try:
+                specialized_sections = []
+                specialized_section_elements = self.driver.find_elements(By.CLASS_NAME, "specialized-section")
+                for elem in specialized_section_elements:
+                    specialized_sections.append(elem.text.strip())
+            except:
+                specialized_sections = ["No Specialized Sections Found"]
+            print("Specialized Sections:", specialized_sections)
+
         except Exception as e:
-            print("Error extracting profile heading data:", e)
+            print("Error during data extraction:", e)
 
-        try:
-            # Open the target webpage
-
-            # Wait until the element with the given class name is present
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(
-                EC.presence_of_element_located((By.CLASS_NAME, "at-a-glance_row--appointments-online"))
-            )
-
-            # Get the inner HTML of the element
-            inner_html = element.get_attribute("innerHTML")
-
-            # Parse the HTML with BeautifulSoup
-            soup = BeautifulSoup(inner_html, "html.parser")
-
-            # Extract the text content
-            text_content = soup.get_text(strip=True)
-            print("Avalabilty Text:", text_content)
-
-        except Exception as e:
-            print("Error:", e)
-
-        try:
-            # Extract paragraph text
-            span_element = self.driver.find_element(By.CLASS_NAME, 'paragraph')
-            inner_html = span_element.get_attribute("innerHTML")
-            paragraph_text = BeautifulSoup(inner_html, 'html.parser').get_text(strip=True)
-            print("Paragraph:", paragraph_text)
-        except Exception:
-            print("No paragraph found.")
-
-        try:
-            # Extract phone number
-            phone_element = self.driver.find_element(By.CLASS_NAME, 'lets-connect-phone-number')
-            phone_href = phone_element.get_attribute("href")
-            phone_number = re.search(r'\+?\(?\d{3}\)?\s?-?\d{3}-\d{4}', phone_href)
-            print("Extracted Phone Number:", phone_number.group() if phone_number else "No phone number found.")
-        except Exception:
-            print("No phone number found.")
-
-        try:
-            # Find the element
-            element = self.driver.find_element(By.CLASS_NAME, "primary-details")
-
-            # Get the inner HTML content
-            inner_html = element.get_attribute("innerHTML")
-
-            # Parse the inner HTML using BeautifulSoup
-            soup = BeautifulSoup(inner_html, "html.parser")
-
-            # Get the text content from the parsed HTML
-            text_content = soup.get_text(strip=True)  # `strip=True` removes leading/trailing spaces
-
-            print("Licensed:", text_content)
-        except Exception as e:
-            print("Nothing found:", e)
-        try:
-            # wait = WebDriverWait(self.driver, 10)
-            element =self.driver.find_element(By.CLASS_NAME, "area-level")
-
-            # Get the inner HTML of the element
-            inner_html = element.get_attribute("innerHTML")
-
-            # Use BeautifulSoup to parse the HTML and extract text
-            soup = BeautifulSoup(inner_html, "html.parser")
-            text_content = soup.get_text(strip=True)  # Extract text and remove extra spaces
-
-            # Print the extracted text
-            print("Relevent Cities Text:", text_content)
-        except:
-            print("Not found")
-        try:
-
-
-            # Wait until the element with class 'profile-photo clickable' is visible
-            wait = WebDriverWait(self.driver, 10)
-            image_element = wait.until(
-                EC.presence_of_element_located((By.CLASS_NAME, "profile-photo.clickable"))
-            )
-
-            # Get the image URL from the 'src' attribute
-            image_url = image_element.get_attribute("src")
-            print("Image URL:", image_url)
-
-        except Exception as e:
-            print("Error:", e)
-
-        try:
-            # Wait until the element with class 'client-focus-item' is present
-            wait = WebDriverWait(self.driver, 10)
-            element = wait.until(
-                EC.presence_of_element_located((By.CLASS_NAME, "client-focus-item"))
-            )
-
-            # Get the inner HTML of the element
-            inner_html = element.get_attribute("innerHTML")
-
-            # Parse the HTML with BeautifulSoup
-            soup = BeautifulSoup(inner_html, "html.parser")
-
-            # Extract the text content
-            text_content = soup.get_text(strip=True)
-            print("Extracted Text:", text_content)
-
-        except Exception as e:
-            print("Error:", e)
 
     def go_to_next_page(self):
         """
