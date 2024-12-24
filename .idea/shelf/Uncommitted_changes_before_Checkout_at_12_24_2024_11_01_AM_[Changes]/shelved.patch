@@ -1,0 +1,97 @@
+Index: scrapper.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from selenium import webdriver\r\nfrom selenium.webdriver.common.by import By\r\nfrom selenium.webdriver.chrome.service import Service\r\nfrom webdriver_manager.chrome import ChromeDriverManager\r\nfrom selenium.webdriver.support.ui import WebDriverWait\r\nfrom selenium.webdriver.support import expected_conditions as EC\r\nimport re\r\nfrom bs4 import BeautifulSoup\r\nimport time\r\n\r\n\r\n'''\r\n- Install all requirements\r\n- Run the script\r\n\r\n'''\r\n\r\nclass Scrapper:\r\n    def __init__(self,url = \"https://www.psychologytoday.com/us/therapists?search=ontario\"):\r\n        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))\r\n        self.driver.get(url)\r\n        self.driver.implicitly_wait(10)\r\n        self.driver.maximize_window()\r\n\r\n    def crawl_page(self):\r\n        \"\"\"\r\n            Crawls through profile links on a webpage, extracts relevant information from each profile,\r\n            and prints the extracted data.\r\n            It only scrape the data from visible one page you need to add functionality to switch profile in order\r\n            to scrape more\r\n\r\n            This method performs the following steps:\r\n            1. Finds all profile links by their class name (`profile-title`).\r\n            2. For each profile link:\r\n                - Clicks the link to navigate to the profile page.\r\n                - Extracts and prints the URL of the profile.\r\n                - Extracts and prints the profile title, suffix, and address by parsing the inner HTML of the profile's content section.\r\n                - Extracts and prints the paragraph text from a specific section.\r\n                - Extracts and prints the phone number from the `tel:` link (if available).\r\n                - Closes the profile page after extraction.\r\n\r\n            The method uses Selenium for web scraping and BeautifulSoup to parse HTML content.\r\n\r\n            Attributes:\r\n                self.driver: A Selenium WebDriver instance used to interact with the web page.\r\n\r\n            Returns:\r\n                None. Prints the extracted data to the console.\r\n\r\n            Example:\r\n                crawler = scrapper()\r\n                crawler.crawl()\r\n            \"\"\"\r\n\r\n        profile_links = self.driver.find_elements(By.CLASS_NAME, 'profile-title')\r\n\r\n        for link in profile_links:\r\n            print(\"Profile Status\".center(50, \"-\"))\r\n            link.click()  # Click the link to open the modal/popup\r\n\r\n            elements = self.driver.find_elements(By.CLASS_NAME, \"profile-heading-content\")\r\n            print(f\"Found {len(elements)} elements with class 'profile-heading-content'\")\r\n\r\n            # WebDriverWait(self.driver, 20).until(\r\n            #     EC.presence_of_element_located((By.CSS_SELECTOR, 'div.modal-container .profile-heading-content'))\r\n            # )\r\n\r\n\r\n            # Extract data from the modal/popup\r\n            self.extract_profile_data()\r\n\r\n            # Close the modal/popup after extracting the data\r\n            close_button = WebDriverWait(self.driver, 10).until(\r\n                EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.details-nav.details-close .icon-close'))\r\n            )\r\n            close_button.click()\r\n\r\n            # Wait briefly to ensure the modal closes before clicking the next profile\r\n            # time.sleep(2)\r\n\r\n    def extract_profile_data(self):\r\n        \"\"\"\r\n        Extracts and prints the data from an open profile modal/popup.\r\n        \"\"\"\r\n        try:\r\n            # Extract main content from the modal\r\n\r\n\r\n            div_element = self.driver.find_element(By.CLASS_NAME, \"profile-heading-content\")\r\n            inner_html = div_element.get_attribute(\"innerHTML\")\r\n            soup = BeautifulSoup(inner_html, 'html.parser')\r\n\r\n            # Extract the desired text\r\n            profile_title = soup.find(\"h1\", class_=\"profile-title\").get_text(strip=True)\r\n            profile_suffix = soup.find(\"h2\", class_=\"profile-suffix-heading\").get_text(strip=True)\r\n            address = soup.find(\"span\", class_=\"address-region\").get_text(strip=True)\r\n\r\n            print(\"Profile Title:\", profile_title)\r\n            print(\"Profile Suffix:\", profile_suffix)\r\n            print(\"Address:\", address)\r\n        except Exception as e:\r\n            print(\"Error extracting profile heading data:\", e)\r\n\r\n        try:\r\n            # Open the target webpage\r\n\r\n            # Wait until the element with the given class name is present\r\n            wait = WebDriverWait(self.driver, 10)\r\n            element = wait.until(\r\n                EC.presence_of_element_located((By.CLASS_NAME, \"at-a-glance_row--appointments-online\"))\r\n            )\r\n\r\n            # Get the inner HTML of the element\r\n            inner_html = element.get_attribute(\"innerHTML\")\r\n\r\n            # Parse the HTML with BeautifulSoup\r\n            soup = BeautifulSoup(inner_html, \"html.parser\")\r\n\r\n            # Extract the text content\r\n            text_content = soup.get_text(strip=True)\r\n            print(\"Avalabilty Text:\", text_content)\r\n\r\n        except Exception as e:\r\n            print(\"Error:\", e)\r\n\r\n        try:\r\n            # Extract paragraph text\r\n            span_element = self.driver.find_element(By.CLASS_NAME, 'paragraph')\r\n            inner_html = span_element.get_attribute(\"innerHTML\")\r\n            paragraph_text = BeautifulSoup(inner_html, 'html.parser').get_text(strip=True)\r\n            print(\"Paragraph:\", paragraph_text)\r\n        except Exception:\r\n            print(\"No paragraph found.\")\r\n\r\n        try:\r\n            # Extract phone number\r\n            phone_element = self.driver.find_element(By.CLASS_NAME, 'lets-connect-phone-number')\r\n            phone_href = phone_element.get_attribute(\"href\")\r\n            phone_number = re.search(r'\\+?\\(?\\d{3}\\)?\\s?-?\\d{3}-\\d{4}', phone_href)\r\n            print(\"Extracted Phone Number:\", phone_number.group() if phone_number else \"No phone number found.\")\r\n        except Exception:\r\n            print(\"No phone number found.\")\r\n\r\n        try:\r\n            # Find the element\r\n            element = self.driver.find_element(By.CLASS_NAME, \"primary-details\")\r\n\r\n            # Get the inner HTML content\r\n            inner_html = element.get_attribute(\"innerHTML\")\r\n\r\n            # Parse the inner HTML using BeautifulSoup\r\n            soup = BeautifulSoup(inner_html, \"html.parser\")\r\n\r\n            # Get the text content from the parsed HTML\r\n            text_content = soup.get_text(strip=True)  # `strip=True` removes leading/trailing spaces\r\n\r\n            print(\"Licensed:\", text_content)\r\n        except Exception as e:\r\n            print(\"Nothing found:\", e)\r\n        try:\r\n            # wait = WebDriverWait(self.driver, 10)\r\n            element =self.driver.find_element(By.CLASS_NAME, \"area-level\")\r\n\r\n            # Get the inner HTML of the element\r\n            inner_html = element.get_attribute(\"innerHTML\")\r\n\r\n            # Use BeautifulSoup to parse the HTML and extract text\r\n            soup = BeautifulSoup(inner_html, \"html.parser\")\r\n            text_content = soup.get_text(strip=True)  # Extract text and remove extra spaces\r\n\r\n            # Print the extracted text\r\n            print(\"Relevent Cities Text:\", text_content)\r\n        except:\r\n            print(\"Not found\")\r\n        try:\r\n\r\n\r\n            # Wait until the element with class 'profile-photo clickable' is visible\r\n            wait = WebDriverWait(self.driver, 10)\r\n            image_element = wait.until(\r\n                EC.presence_of_element_located((By.CLASS_NAME, \"profile-photo.clickable\"))\r\n            )\r\n\r\n            # Get the image URL from the 'src' attribute\r\n            image_url = image_element.get_attribute(\"src\")\r\n            print(\"Image URL:\", image_url)\r\n\r\n        except Exception as e:\r\n            print(\"Error:\", e)\r\n\r\n        try:\r\n            # Wait until the element with class 'client-focus-item' is present\r\n            wait = WebDriverWait(self.driver, 10)\r\n            element = wait.until(\r\n                EC.presence_of_element_located((By.CLASS_NAME, \"client-focus-item\"))\r\n            )\r\n\r\n            # Get the inner HTML of the element\r\n            inner_html = element.get_attribute(\"innerHTML\")\r\n\r\n            # Parse the HTML with BeautifulSoup\r\n            soup = BeautifulSoup(inner_html, \"html.parser\")\r\n\r\n            # Extract the text content\r\n            text_content = soup.get_text(strip=True)\r\n            print(\"Extracted Text:\", text_content)\r\n\r\n        except Exception as e:\r\n            print(\"Error:\", e)\r\n\r\n    def go_to_next_page(self):\r\n        \"\"\"\r\n        Clicks on the 'Next' button to go to the next page.\r\n        Returns True if the next page exists, otherwise False.\r\n        \"\"\"\r\n        try:\r\n            next_button = WebDriverWait(self.driver, 10).until(\r\n                EC.presence_of_element_located((By.CSS_SELECTOR, '.pagination-controls-end .chevron-right'))\r\n            )\r\n            next_button.click()\r\n            time.sleep(3)  # Allow time for the next page to load\r\n            return True\r\n        except Exception:\r\n            print(\"No more pages found.\")\r\n            return False\r\n\r\n    def crawl(self):\r\n        \"\"\"\r\n        Crawls all pages and extracts data from each profile.\r\n        \"\"\"\r\n        while True:\r\n            print(\"Scraping current page...\")\r\n            self.crawl_page()\r\n\r\n            # Go to the next page, break if no more pages\r\n            if not self.go_to_next_page():\r\n                break\r\n\r\n        self.driver.quit()\r\n\r\n\r\nif __name__ == \"__main__\":\r\n    obj = Scrapper()\r\n    obj.crawl()
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/scrapper.py b/scrapper.py
+--- a/scrapper.py	(revision 5244ff28b22be60a5e2b7225552ef3cac7ebc3a9)
++++ b/scrapper.py	(date 1735066495238)
+@@ -203,7 +203,85 @@
+ 
+             # Extract the text content
+             text_content = soup.get_text(strip=True)
+-            print("Extracted Text:", text_content)
++            print("Client Focus Age:", text_content)
++
++        except Exception as e:
++            print("Error:", e)
++
++        try:
++            # Wait until the element with class 'client-focus-item' is present
++            wait = WebDriverWait(self.driver, 10)
++            element = wait.until(
++                EC.presence_of_element_located((By.CLASS_NAME, "fees"))
++            )
++
++            # Get the inner HTML of the element
++            inner_html = element.get_attribute("innerHTML")
++
++            # Parse the HTML with BeautifulSoup
++            soup = BeautifulSoup(inner_html, "html.parser")
++
++            # Extract the text content
++            text_content = soup.get_text(strip=True)
++            print("Fees Text:", text_content)
++
++        except Exception as e:
++            print("Error:", e)
++
++        try:
++            # Wait until the element with class 'client-focus-item' is present
++            wait = WebDriverWait(self.driver, 10)
++            element = wait.until(
++                EC.presence_of_element_located((By.CLASS_NAME, "client-focus-item"))
++            )
++
++            # Get the inner HTML of the element
++            inner_html = element.get_attribute("innerHTML")
++
++            # Parse the HTML with BeautifulSoup
++            soup = BeautifulSoup(inner_html, "html.parser")
++
++            # Extract the text content
++            text_content = soup.get_text(strip=True)
++            print("Additional Language:", text_content)
++
++        except Exception as e:
++            print("Error:", e)
++        try:
++            # Wait until the element with class 'client-focus-item' is present
++            wait = WebDriverWait(self.driver, 10)
++            element = wait.until(
++                EC.presence_of_element_located((By.CLASS_NAME, "insurance"))
++            )
++
++            # Get the inner HTML of the element
++            inner_html = element.get_attribute("innerHTML")
++
++            # Parse the HTML with BeautifulSoup
++            soup = BeautifulSoup(inner_html, "html.parser")
++
++            # Extract the text content
++            text_content = soup.get_text(strip=True)
++            print("Insurane Text:", text_content)
++
++        except Exception as e:
++            print("Error:", e)
++        try:
++            # Wait until the element with class 'client-focus-item' is present
++            wait = WebDriverWait(self.driver, 10)
++            element = wait.until(
++                EC.presence_of_element_located((By.CLASS_NAME, "attributes-group"))
++            )
++
++            # Get the inner HTML of the element
++            inner_html = element.get_attribute("innerHTML")
++
++            # Parse the HTML with BeautifulSoup
++            soup = BeautifulSoup(inner_html, "html.parser")
++
++            # Extract the text content
++            text_content = soup.get_text(strip=True)
++            print("Type Of therapy:", text_content)
+ 
+         except Exception as e:
+             print("Error:", e)
