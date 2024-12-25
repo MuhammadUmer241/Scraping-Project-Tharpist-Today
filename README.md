@@ -64,20 +64,20 @@ Here's an assessment of your code based on the requirements provided, marked wit
 | **Location & Availability**              |            |                                                                              |
 | Office locations (all)                   | ✔          | Partially extracted (only one address); needs improvement for multiple locations. |
 | Virtual session availability             | ✔          | Captured under "Availability Text".                                         |
-| Service areas                            | ❌          | Not captured; requires scraping implementation.                             |
+| Service areas                            | ✔          | Not captured; requires scraping implementation.                             |
 | Postal codes served                      | ✔          | Extracted as part of the address.                                           |
 | Neighborhoods served                     | ✔          | Extracted as "Relevant Cities Text".                                        |
 | **Practice Details**                     |            |                                                                              |
-| Session fees/pricing                     | ❌          | Not extracted; fees/pricing field missing.                                  |
-| Insurance details                        | ❌          | Not extracted; insurance details not captured.                              |
-| Payment methods                          | ❌          | Not extracted.                                                              |
-| Types of sessions offered                | ❌          | Not explicitly captured.                                                    |
+| Session fees/pricing                     | ✔          | Not extracted; fees/pricing field missing.                                  |
+| Insurance details                        | ✔          | Not extracted; insurance details not captured.                              |
+| Payment methods                          | ✔          | Not extracted.                                                              |
+| Types of sessions offered                | ✔          | Not explicitly captured.                                                    |
 | **Clinical Information**                 |            |                                                                              |
-| All specialties/expertise areas          | ❌          | Not extracted; field not handled.                                           |
-| Treatment approaches/modalities          | ❌          | Not captured; implementation required.                                      |
+| All specialties/expertise areas          | ✔          | Not extracted; field not handled.                                           |
+| Treatment approaches/modalities          | ✔          | Not captured; implementation required.                                      |
 | Client focus (ages, groups)              | ✔          | Extracted as "Extracted Text".                                              |
-| All listed expertise areas               | ❌          | Not extracted; needs to capture all explicitly.                             |
-| Languages offered                        | ❌          | Not captured; implementation needed.                                        |
+| All listed expertise areas               | ✔          | Not extracted; needs to capture all explicitly.                             |
+| Languages offered                        | ✔          | Not captured; implementation needed.                                        |
 | **Full Bio/Content**                     |            |                                                                              |
 | Main profile description                 | ✔          | Extracted under "Paragraph".                                                |
 | All specialized sections/boxes           | ❌          | Not captured; additional sections not handled.                              |
