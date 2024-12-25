@@ -44,7 +44,10 @@ class Scrapper:
         self.thrapy_Way = []
         self.speak= []
         self.participants = []
+        self.unique_index= []
+        self.url_profile = []
         columns = [
+            "url",
             "profile_title",
             "profle_suffix",
             "address",
@@ -110,14 +113,14 @@ class Scrapper:
 
             elements = self.driver.find_elements(By.CLASS_NAME, "profile-heading-content")
             print(f"Found {len(elements)} elements with class 'profile-heading-content'")
-
+            url = link.get_attribute("href")
             # WebDriverWait(self.driver, 20).until(
             #     EC.presence_of_element_located((By.CSS_SELECTOR, 'div.modal-container .profile-heading-content'))
             # )
 
 
             # Extract data from the modal/popup
-            self.extract_profile_data()
+            self.extract_profile_data(url)
 
             # Close the modal/popup after extracting the data
             close_button = WebDriverWait(self.driver, 10).until(
@@ -128,10 +131,15 @@ class Scrapper:
             # Wait briefly to ensure the modal closes before clicking the next profile
             # time.sleep(2)
 
-    def extract_profile_data(self):
+    def extract_profile_data(self,url):
         """
         Extracts and prints the data from an open profile modal/popup.
         """
+
+        try:
+            self.url_profile = url
+        except:
+            print("No Url Found")
         try:
             # Extract main content from the modal
 
@@ -196,7 +204,7 @@ class Scrapper:
             phone_href = phone_element.get_attribute("href")
             phone_number = re.search(r'\+?\(?\d{3}\)?\s?-?\d{3}-\d{4}', phone_href)
             print("Extracted Phone Number:", phone_number.group() if phone_number else "No phone number found.")
-            self.number= phone_number
+            self.number= phone_number.group()
             self.df.loc[len(self.df)] = [self.profile_title, self.profle_suffix, self.address, self.availablity,
                                          self.bio,self.number]
         except Exception:
@@ -424,10 +432,15 @@ class Scrapper:
             # Step 6: Print the list of extracted therapies
             print("Therapy Ways:", therapy_list)
             self.thrapy_Way= therapy_list
-            self.df.loc[len(self.df)] = [self.profile_title, self.profle_suffix, self.address, self.availablity,
+
+            #check to save only unique values
+            if self.number not in self.unique_index:
+                self.unique_index.append(self.number)
+                self.df.loc[len(self.df)] = [self.url_profile, self.profile_title, self.profle_suffix, self.address, self.availablity,
                                          self.bio, self.number, self.license_number, self.image_url, self.fee,
                                          self.insurance, self.expetise, self.speciality, self.cities, self.countries,
                                          self.zip, self.neighboor, self.age, self.participants, self.ethentisy, self.thrapy_Way]
+
 
         except Exception as e:
             print("Error:", e)
@@ -483,6 +496,45 @@ class Scrapper:
             # Print attribute name and its value
             print(f"{attr}: {value}")
 
+    def save_to_csv(self):
+        for col in self.df.columns:
+            if self.df[col].apply(lambda x: isinstance(x, list)).any():
+                self.df[col] = self.df[col].apply(lambda x: str(x) if isinstance(x, list) else x)
+        self.df.set_index("number", inplace= True)
+        self.df = self.df[~self.df.index.duplicated(keep='first')]
+        self.df.replace("set()", "Not Presented")
+        self.df.reset_index(drop=False, inplace =True)
+
+
+        output_path = "CSV Data Lake"
+        os.makedirs(output_path, exist_ok=True)
+
+        # Generate filename with current date and time
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f"data_{timestamp}.csv"
+        # Create the full path for the file
+        full_path = os.path.join(output_path, filename)
+
+        # Save the DataFrame as CSV
+        self.df.to_csv(full_path, index=False)
+
+    def save_to_json(self):
+        output_path = "Json Data Lake"
+        os.makedirs(output_path, exist_ok=True)
+
+        # Generate filename with current date and time
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f"data_{timestamp}.json"
+
+        # Create the full path for the file
+        full_path = os.path.join(output_path, filename)
+
+        # Save the DataFrame as a JSON file
+        self.df.to_json(path_or_buf=full_path, orient="index", indent=4, force_ascii=False)
+
+        print(f"DataFrame saved at: {full_path}")
+
+
 
 if __name__ == "__main__":
     obj = Scrapper()
@@ -490,17 +542,7 @@ if __name__ == "__main__":
         obj.crawl()
     except:
         print("Finished")
+    obj.save_to_csv()
+    obj.save_to_json()
 
-    output_path= "Data Lake"
-    os.makedirs(output_path, exist_ok=True)
 
-    # Generate filename with current date and time
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = f"data_{timestamp}.csv"
-    # Create the full path for the file
-    full_path = os.path.join(output_path, filename)
-
-    # Save the DataFrame as CSV
-    obj.df.to_csv(full_path, index=False)
-
-    print(f"DataFrame saved at: {full_path}")
