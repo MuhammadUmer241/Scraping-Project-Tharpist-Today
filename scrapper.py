@@ -8,6 +8,8 @@ import re
 from bs4 import BeautifulSoup
 import time
 import pandas as pd
+from datetime import datetime
+import os
 
 '''
 - Install all requirements
@@ -17,6 +19,10 @@ import pandas as pd
 
 class Scrapper:
     def __init__(self,url = "https://www.psychologytoday.com/us/therapists?search=ontario"):
+        self.license_number= []
+        self.fee= []
+        self.insurance= []
+        self.speciality = []
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
         self.driver.get(url)
         self.driver.implicitly_wait(10)
@@ -28,10 +34,6 @@ class Scrapper:
         self.bio = []
         self.number = []
         self.image_url = []
-        self.license_number= []
-        self.fee= []
-        self.insurance= []
-        self.speciality = []
         self.expetise= []
         self.cities= []
         self.countries = []
@@ -42,6 +44,31 @@ class Scrapper:
         self.thrapy_Way = []
         self.speak= []
         self.participants = []
+        columns = [
+            "profile_title",
+            "profle_suffix",
+            "address",
+            "availablity",
+            "bio",
+            "number",
+            "license_number",
+            "image_url",
+            "fee",
+            "insurance",
+            "expetise",
+            "speciality",
+            "cities",
+            "countries",
+            "zip",
+            "neighboor",
+            "age",
+            "participants",
+            "ethentisy",
+            "thrapy_Way"
+        ]
+
+        self.df = pd.DataFrame(columns= columns)
+
 
 
 
@@ -121,10 +148,11 @@ class Scrapper:
             print("Profile Title:", profile_title)
             print("Profile Suffix:", profile_suffix)
             print("Address:", address)
+            self.profile_title= profile_title
+            self.profle_suffix= profile_suffix
+            self.address= address
 
-            self.profile_title.append(profile_title)
-            self.profle_suffix.append(profile_suffix)
-            self.address.append(address)
+
         except Exception as e:
             print("Error extracting profile heading data:", e)
 
@@ -145,7 +173,8 @@ class Scrapper:
             # Extract the text content
             text_content = soup.get_text(strip=True)
             print("Avalabilty Text:", text_content)
-            self.availablity.append(text_content)
+            self.availablity = text_content
+            self.df.loc[len(self.df)] = [self.profile_title, self.profle_suffix, self.address,self.availablity]
 
         except Exception as e:
             print("Error:", e)
@@ -156,7 +185,8 @@ class Scrapper:
             inner_html = span_element.get_attribute("innerHTML")
             paragraph_text = BeautifulSoup(inner_html, 'html.parser').get_text(strip=True)
             print("Paragraph:", paragraph_text)
-            self.bio.append(paragraph_text)
+            self.bio= paragraph_text
+            self.df.loc[len(self.df)] = [self.profile_title, self.profle_suffix, self.address, self.availablity,self.bio]
         except Exception:
             print("No paragraph found.")
 
@@ -166,7 +196,9 @@ class Scrapper:
             phone_href = phone_element.get_attribute("href")
             phone_number = re.search(r'\+?\(?\d{3}\)?\s?-?\d{3}-\d{4}', phone_href)
             print("Extracted Phone Number:", phone_number.group() if phone_number else "No phone number found.")
-            self.number.append(phone_number)
+            self.number= phone_number
+            self.df.loc[len(self.df)] = [self.profile_title, self.profle_suffix, self.address, self.availablity,
+                                         self.bio,self.number]
         except Exception:
             print("No phone number found.")
 
@@ -184,7 +216,9 @@ class Scrapper:
             text_content = soup.get_text(strip=True)  # `strip=True` removes leading/trailing spaces
 
             print("Licensed:", text_content)
-            self.license_number.append(text_content)
+            self.license_number= text_content
+            self.df.loc[len(self.df)] = [self.profile_title, self.profle_suffix, self.address, self.availablity,
+                                         self.bio, self.number,self.license_number]
         except Exception as e:
             print("Nothing found:", e)
         try:
@@ -197,7 +231,9 @@ class Scrapper:
             # Get the image URL from the 'src' attribute
             image_url = image_element.get_attribute("src")
             print("Image URL:", image_url)
-            self.image_url.append(image_url)
+            self.image_url= image_url
+            self.df.loc[len(self.df)] = [self.profile_title, self.profle_suffix, self.address, self.availablity,
+                                         self.bio, self.number, self.license_number, self.image_url]
 
         except Exception as e:
             print("Error:", e)
@@ -210,7 +246,9 @@ class Scrapper:
             wait = WebDriverWait(self.driver, 10)
             text_content = self.extract_list_items("fees")
             print("Fees Text:", text_content)
-            self.fee.append(text_content)
+            self.fee= text_content
+            self.df.loc[len(self.df)] = [self.profile_title, self.profle_suffix, self.address, self.availablity,
+                                         self.bio, self.number, self.license_number, self.image_url, self.fee]
 
         except Exception as e:
             print("Error:", e)
@@ -223,7 +261,9 @@ class Scrapper:
 
             li = self.extract_list_items("insurance")
             print("Insurane Text:", li)
-            self.insurance.append(li)
+            self.insurance= li
+            self.df.loc[len(self.df)] = [self.profile_title, self.profle_suffix, self.address, self.availablity,
+                                         self.bio, self.number, self.license_number, self.image_url, self.fee,self.insurance]
         except Exception as e:
             print("Error:", e)
         try:
@@ -247,8 +287,11 @@ class Scrapper:
             # Print the results
             print("Top Specialties:", specialties_list)
             print("Expertise:", expertise_list)
-            self.speciality.append(specialties_list)
-            self.expetise.append(expertise_list)
+            self.speciality= specialties_list
+            self.expetise = expertise_list
+            self.df.loc[len(self.df)] = [self.profile_title, self.profle_suffix, self.address, self.availablity,
+                                         self.bio, self.number, self.license_number, self.image_url, self.fee,
+                                         self.insurance, self.expetise, self.speciality]
 
         except Exception as e:
             print("Error:", e)
@@ -283,13 +326,13 @@ class Scrapper:
 
                 print(f"{title}: {links}")
                 if i==1:
-                    self.cities.append(links)
+                    self.cities = links
                 if i==2:
-                    self.countries.append(links)
+                    self.countries= links
                 if i==3:
-                    self.zip.append(links)
+                    self.zip= links
                 if i==4:
-                    self.neighboor.append(links)
+                    self.neighboor= links
                 i+=1
 
         except:
@@ -346,14 +389,17 @@ class Scrapper:
             # Step 12: Print or use the extracted data
 
             print("Age:", age_list)
-            self.age.append(list(age_list))
+            self.age = list(age_list)
+
             print("Participants:", participants_list)
-            self.participants.append(list(participants_list))
+            self.participants= list(participants_list)
 
             print("I also speak:", speak_list)
             self.speak.append([speak_list])
             print("Ethnicity:", ethnicity_list)
-            self.ethentisy.append([ethnicity_list])
+            self.ethentisy= list(ethnicity_list)
+
+
         except:
             print("No Client")
 
@@ -377,7 +423,11 @@ class Scrapper:
 
             # Step 6: Print the list of extracted therapies
             print("Therapy Ways:", therapy_list)
-            self.thrapy_Way.append(therapy_list)
+            self.thrapy_Way= therapy_list
+            self.df.loc[len(self.df)] = [self.profile_title, self.profle_suffix, self.address, self.availablity,
+                                         self.bio, self.number, self.license_number, self.image_url, self.fee,
+                                         self.insurance, self.expetise, self.speciality, self.cities, self.countries,
+                                         self.zip, self.neighboor, self.age, self.participants, self.ethentisy, self.thrapy_Way]
 
         except Exception as e:
             print("Error:", e)
@@ -425,85 +475,13 @@ class Scrapper:
 
         self.driver.quit()
 
-    def create_dataframe(self):
-        # Find the maximum length of all lists
-        max_length = max(len(lst) for lst in [
-            self.profile_title,
-            self.profle_suffix,
-            self.address,
-            self.availablity,
-            self.bio,
-            self.number,
-            self.image_url,
-            self.license_number,
-            self.fee,
-            self.insurance,
-            self.speciality,
-            self.expetise,
-            self.cities,
-            self.countries,
-            self.zip,
-            self.neighboor,
-            self.age,
-            self.ethentisy,
-            self.thrapy_Way,
-            self.speak,
-            self.participants,
-        ])
 
-        # Pad all lists with None to make them the same length
-        self.profile_title.extend([None] * (max_length - len(self.profile_title)))
-        self.profle_suffix.extend([None] * (max_length - len(self.profle_suffix)))
-        self.address.extend([None] * (max_length - len(self.address)))
-        self.availablity.extend([None] * (max_length - len(self.availablity)))
-        self.bio.extend([None] * (max_length - len(self.bio)))
-        self.number.extend([None] * (max_length - len(self.number)))
-        self.image_url.extend([None] * (max_length - len(self.image_url)))
-        self.license_number.extend([None] * (max_length - len(self.license_number)))
-        self.fee.extend([None] * (max_length - len(self.fee)))
-        self.insurance.extend([None] * (max_length - len(self.insurance)))
-        self.speciality.extend([None] * (max_length - len(self.speciality)))
-        self.expetise.extend([None] * (max_length - len(self.expetise)))
-        self.cities.extend([None] * (max_length - len(self.cities)))
-        self.countries.extend([None] * (max_length - len(self.countries)))
-        self.zip.extend([None] * (max_length - len(self.zip)))
-        self.neighboor.extend([None] * (max_length - len(self.neighboor)))
-        self.age.extend([None] * (max_length - len(self.age)))
-        self.ethentisy.extend([None] * (max_length - len(self.ethentisy)))
-        self.thrapy_Way.extend([None] * (max_length - len(self.thrapy_Way)))
-        self.speak.extend([None] * (max_length - len(self.speak)))
-        self.participants.extend([None] * (max_length - len(self.participants)))
 
-        # Create a dictionary where keys are column names and values are the padded lists
-        data = {
-            "profile_title": self.profile_title,
-            "profle_suffix": self.profle_suffix,
-            "address": self.address,
-            "availablity": self.availablity,
-            "bio": self.bio,
-            "number": self.number,
-            "image_url": self.image_url,
-            "license_number": self.license_number,
-            "fee": self.fee,
-            "insurance": self.insurance,
-            "speciality": self.speciality,
-            "expetise": self.expetise,
-            "cities": self.cities,
-            "countries": self.countries,
-            "zip": self.zip,
-            "neighboor": self.neighboor,
-            "age": self.age,
-            "ethentisy": self.ethentisy,
-            "thrapy_Way": self.thrapy_Way,
-            "speak": self.speak,
-            "participants": self.participants,
-        }
-
-        # Create a DataFrame using the dictionary
-        df = pd.DataFrame(data)
-
-        # Return the DataFrame
-        return df
+    def print_attributes(self):
+        # Loop through all attributes of the class
+        for attr, value in self.__dict__.items():
+            # Print attribute name and its value
+            print(f"{attr}: {value}")
 
 
 if __name__ == "__main__":
@@ -512,5 +490,17 @@ if __name__ == "__main__":
         obj.crawl()
     except:
         print("Finished")
-    df = obj.create_dataframe()
-    df.to_csv("File")
+
+    output_path= "Data Lake"
+    os.makedirs(output_path, exist_ok=True)
+
+    # Generate filename with current date and time
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"data_{timestamp}.csv"
+    # Create the full path for the file
+    full_path = os.path.join(output_path, filename)
+
+    # Save the DataFrame as CSV
+    obj.df.to_csv(full_path, index=False)
+
+    print(f"DataFrame saved at: {full_path}")
