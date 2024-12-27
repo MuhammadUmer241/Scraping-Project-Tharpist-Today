@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1dcfaf05-5bcd-49ef-8f8c-2f3301a888c6" name="Changes" comment="Scraped Everything and Version1 of Creating Data Frame">
+    <list default="true" id="1dcfaf05-5bcd-49ef-8f8c-2f3301a888c6" name="Changes" comment="CSV and Json Save">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/File" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/scrapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/scrapper.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -151,7 +150,15 @@
       <option name="project" value="LOCAL" />
       <updated>1735082321762</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="CSV and Json Save">
+      <option name="closed" value="true" />
+      <created>1735286403766</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1735286403766</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -169,6 +176,7 @@
     <MESSAGE value="verfied number, availabilty data scrape" />
     <MESSAGE value="Scraped Everthing and Version1 of Creating Data Frame" />
     <MESSAGE value="Scraped Everything and Version1 of Creating Data Frame" />
-    <option name="LAST_COMMIT_MESSAGE" value="Scraped Everything and Version1 of Creating Data Frame" />
+    <MESSAGE value="CSV and Json Save" />
+    <option name="LAST_COMMIT_MESSAGE" value="CSV and Json Save" />
   </component>
 </project>
