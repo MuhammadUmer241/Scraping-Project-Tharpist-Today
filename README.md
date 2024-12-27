@@ -81,8 +81,8 @@ Here's an assessment of your code based on the requirements provided, marked wit
 | **Full Bio/Content**                     |            |                                                                              |
 | Main profile description                 | ✔          | Extracted under "Paragraph".                                                |
 | All specialized sections/boxes           | ✔          | Not captured; additional sections not handled.                              |
-| Qualifications                           | ❌          | Not explicitly extracted.                                                   |
-| Educational background                   | ❌          | Not captured; implementation required.                                      |
+| Qualifications                           | ✔          | Not explicitly extracted.                                                   |
+| Educational background                   | ✔          | Not captured; implementation required.                                      |
 | **Technical Requirements**               |            |                                                                              |
 | Rate limiting (~1 request/second)        | ❌         | No rate-limiting mechanism implemented; add `time.sleep(1)`.                |
 | Handle Psychology Today's pagination     | ✔          |                |
