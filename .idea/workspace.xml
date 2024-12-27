@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1dcfaf05-5bcd-49ef-8f8c-2f3301a888c6" name="Changes" comment="CSV and Json Save">
+    <list default="true" id="1dcfaf05-5bcd-49ef-8f8c-2f3301a888c6" name="Changes" comment="Qualification and Education Scrape">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scrapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/scrapper.py" afterDir="false" />
     </list>
@@ -158,7 +158,23 @@
       <option name="project" value="LOCAL" />
       <updated>1735286403766</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Qualification and Education Scrape">
+      <option name="closed" value="true" />
+      <created>1735288912479</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1735288912479</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Qualification and Education Scrape">
+      <option name="closed" value="true" />
+      <created>1735289041282</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1735289041282</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -177,6 +193,7 @@
     <MESSAGE value="Scraped Everthing and Version1 of Creating Data Frame" />
     <MESSAGE value="Scraped Everything and Version1 of Creating Data Frame" />
     <MESSAGE value="CSV and Json Save" />
-    <option name="LAST_COMMIT_MESSAGE" value="CSV and Json Save" />
+    <MESSAGE value="Qualification and Education Scrape" />
+    <option name="LAST_COMMIT_MESSAGE" value="Qualification and Education Scrape" />
   </component>
 </project>

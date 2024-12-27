@@ -106,7 +106,7 @@ class Scrapper:
                 crawler = scrapper()
                 crawler.crawl()
             """
-        links = []
+
 
         profile_links = self.driver.find_elements(By.CLASS_NAME, 'profile-title')
 
@@ -114,10 +114,10 @@ class Scrapper:
             WebDriverWait(self.driver, 10)
             url = link.get_attribute("href")
 
+            link.click()  # Click the link to open the modal/popup
+            print("Profile Status".center(50, "-"))
             self.url_profile = url
             print(self.url_profile)
-            print("Profile Status".center(50, "-"))
-            link.click()  # Click the link to open the modal/popup
 
 
             elements = self.driver.find_elements(By.CLASS_NAME, "profile-heading-content")
