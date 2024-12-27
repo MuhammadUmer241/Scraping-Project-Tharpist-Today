@@ -46,6 +46,7 @@ class Scrapper:
         self.participants = []
         self.unique_index= []
         self.url_profile = []
+        self.education= []
         columns = [
             "url",
             "profile_title",
@@ -67,7 +68,8 @@ class Scrapper:
             "age",
             "participants",
             "ethentisy",
-            "thrapy_Way"
+            "thrapy_Way",
+            "Education",
         ]
 
         self.df = pd.DataFrame(columns= columns)
@@ -104,21 +106,23 @@ class Scrapper:
                 crawler = scrapper()
                 crawler.crawl()
             """
+        links = []
 
         profile_links = self.driver.find_elements(By.CLASS_NAME, 'profile-title')
-        i=1
+
         for link in profile_links:
             WebDriverWait(self.driver, 10)
-            print("Profile Status".center(50, "-"))
-            link.click()  # Click the link to open the modal/popup
-
-            elements = self.driver.find_elements(By.CLASS_NAME, "profile-heading-content")
-            WebDriverWait(self.driver,30)
-            print(f"Found {len(elements)} elements with class 'profile-heading-content'")
             url = link.get_attribute("href")
 
             self.url_profile = url
             print(self.url_profile)
+            print("Profile Status".center(50, "-"))
+            link.click()  # Click the link to open the modal/popup
+
+
+            elements = self.driver.find_elements(By.CLASS_NAME, "profile-heading-content")
+            WebDriverWait(self.driver,30)
+            print(f"Found {len(elements)} elements with class 'profile-heading-content'")
 
             # Extract data from the modal/popup
             self.extract_profile_data()
@@ -127,12 +131,12 @@ class Scrapper:
             close_button = WebDriverWait(self.driver, 10).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.details-nav.details-close .icon-close'))
             )
+            time.sleep(20)
             close_button.click()
 
-            i=i+1
 
-            # Wait briefly to ensure the modal closes before clicking the next profile
-            # time.sleep(2)
+
+
 
     def extract_profile_data(self):
         """
@@ -142,6 +146,7 @@ class Scrapper:
 
         try:
             # Extract main content from the modal
+
             WebDriverWait(self.driver,10)
 
             div_element = self.driver.find_element(By.CLASS_NAME, "profile-heading-content")
@@ -166,6 +171,7 @@ class Scrapper:
 
         try:
 
+
             # Wait until the element with the given class name is present
             wait = WebDriverWait(self.driver, 10)
             element = wait.until(
@@ -187,6 +193,7 @@ class Scrapper:
             print("Error:", e)
 
         try:
+
             # Extract paragraph text
             WebDriverWait(self.driver, 10)
             span_element = self.driver.find_element(By.CLASS_NAME, 'paragraph')
@@ -199,6 +206,7 @@ class Scrapper:
             print("No paragraph found.")
 
         try:
+
             # Extract phone number
             WebDriverWait(self.driver, 10)
             phone_element = self.driver.find_element(By.CLASS_NAME, 'lets-connect-phone-number')
@@ -211,6 +219,7 @@ class Scrapper:
             print("No phone number found.")
 
         try:
+
             # Find the element
             WebDriverWait(self.driver, 10)
             element = self.driver.find_element(By.CLASS_NAME, "primary-details")
@@ -230,6 +239,7 @@ class Scrapper:
         except Exception as e:
             print("Nothing found:", e)
         try:
+
             # Wait until the element with class 'profile-photo clickable' is visible
             wait = WebDriverWait(self.driver, 10)
             image_element = wait.until(
@@ -248,6 +258,7 @@ class Scrapper:
 
 
         try:
+
             WebDriverWait(self.driver, 10)
 
             text_content = self.extract_list_items("fees")
@@ -257,6 +268,7 @@ class Scrapper:
             print("Error:", e)
 
         try:
+
             #using method as class name was unique
             WebDriverWait(self.driver, 10)
 
@@ -425,17 +437,45 @@ class Scrapper:
             print("Therapy Ways:", therapy_list)
             self.thrapy_Way= therapy_list
 
+
             #check to save only unique values
+
+
+
+        except Exception as e:
+            print("Error:", e)
+        try:
+
+            # Step 2: Locate the main div and its elements
+            qualifications_div = self.driver.find_element(By.CLASS_NAME, "qualifications")
+            qualification_elements = qualifications_div.find_elements(By.CLASS_NAME, "qualifications-element")
+
+            # Step 3: Extract the inner HTML of each element
+            inner_html_list = [element.get_attribute("innerHTML") for element in qualification_elements]
+            education = []
+
+            # Step 4: Process and print the text with Beautiful Soup
+            print("Extracted Text from <li> Elements:")
+            for idx, inner_html in enumerate(inner_html_list, 1):
+                if idx==1:
+                    continue
+                soup = BeautifulSoup(inner_html, "html.parser")
+                extracted_text = soup.get_text(strip=True)  # Get the clean text content
+                education.append(extracted_text)
+                print(f"LI {idx}: {extracted_text}\n")
+            self.education = education
+
+
             if self.number not in self.unique_index:
                 self.unique_index.append(self.number)
                 self.df.loc[len(self.df)] = [self.url_profile, self.profile_title, self.profle_suffix, self.address, self.availablity,
                                              self.bio, self.number, self.license_number, self.image_url, self.fee,
                                              self.insurance, self.expetise, self.speciality, self.cities, self.countries,
-                                             self.zip, self.neighboor, self.age, self.participants, self.ethentisy, self.thrapy_Way]
+                                             self.zip, self.neighboor, self.age, self.participants, self.ethentisy, self.thrapy_Way, self.education]
 
+        except:
+            print("No Qualification found ")
 
-        except Exception as e:
-            print("Error:", e)
     def extract_list_items(self, class_name):
         # Find the insurance section using Selenium
         insurance_section = self.driver.find_element("class name", class_name)
