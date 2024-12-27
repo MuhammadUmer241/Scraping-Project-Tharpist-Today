@@ -110,6 +110,7 @@ class Scrapper:
 
         profile_links = self.driver.find_elements(By.CLASS_NAME, 'profile-title')
 
+
         for link in profile_links:
             WebDriverWait(self.driver, 10)
             url = link.get_attribute("href")
@@ -123,6 +124,8 @@ class Scrapper:
             elements = self.driver.find_elements(By.CLASS_NAME, "profile-heading-content")
             WebDriverWait(self.driver,30)
             print(f"Found {len(elements)} elements with class 'profile-heading-content'")
+
+
 
             # Extract data from the modal/popup
             self.extract_profile_data()
