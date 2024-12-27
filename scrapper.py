@@ -8,6 +8,8 @@ import re
 from bs4 import BeautifulSoup
 import time
 import pandas as pd
+from datetime import datetime
+import os
 
 '''
 - Install all requirements
@@ -17,6 +19,10 @@ import pandas as pd
 
 class Scrapper:
     def __init__(self,url = "https://www.psychologytoday.com/us/therapists?search=ontario"):
+        self.license_number= []
+        self.fee= []
+        self.insurance= []
+        self.speciality = []
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
         self.driver.get(url)
         self.driver.implicitly_wait(10)
@@ -28,10 +34,6 @@ class Scrapper:
         self.bio = []
         self.number = []
         self.image_url = []
-        self.license_number= []
-        self.fee= []
-        self.insurance= []
-        self.speciality = []
         self.expetise= []
         self.cities= []
         self.countries = []
@@ -42,6 +44,34 @@ class Scrapper:
         self.thrapy_Way = []
         self.speak= []
         self.participants = []
+        self.unique_index= []
+        self.url_profile = []
+        columns = [
+            "url",
+            "profile_title",
+            "profle_suffix",
+            "address",
+            "availablity",
+            "bio",
+            "number",
+            "license_number",
+            "image_url",
+            "fee",
+            "insurance",
+            "expetise",
+            "speciality",
+            "cities",
+            "countries",
+            "zip",
+            "neighboor",
+            "age",
+            "participants",
+            "ethentisy",
+            "thrapy_Way"
+        ]
+
+        self.df = pd.DataFrame(columns= columns)
+
 
 
 
@@ -76,18 +106,19 @@ class Scrapper:
             """
 
         profile_links = self.driver.find_elements(By.CLASS_NAME, 'profile-title')
-
+        i=1
         for link in profile_links:
+            WebDriverWait(self.driver, 10)
             print("Profile Status".center(50, "-"))
             link.click()  # Click the link to open the modal/popup
 
             elements = self.driver.find_elements(By.CLASS_NAME, "profile-heading-content")
+            WebDriverWait(self.driver,30)
             print(f"Found {len(elements)} elements with class 'profile-heading-content'")
+            url = link.get_attribute("href")
 
-            # WebDriverWait(self.driver, 20).until(
-            #     EC.presence_of_element_located((By.CSS_SELECTOR, 'div.modal-container .profile-heading-content'))
-            # )
-
+            self.url_profile = url
+            print(self.url_profile)
 
             # Extract data from the modal/popup
             self.extract_profile_data()
@@ -98,6 +129,8 @@ class Scrapper:
             )
             close_button.click()
 
+            i=i+1
+
             # Wait briefly to ensure the modal closes before clicking the next profile
             # time.sleep(2)
 
@@ -105,9 +138,11 @@ class Scrapper:
         """
         Extracts and prints the data from an open profile modal/popup.
         """
+
+
         try:
             # Extract main content from the modal
-
+            WebDriverWait(self.driver,10)
 
             div_element = self.driver.find_element(By.CLASS_NAME, "profile-heading-content")
             inner_html = div_element.get_attribute("innerHTML")
@@ -121,10 +156,11 @@ class Scrapper:
             print("Profile Title:", profile_title)
             print("Profile Suffix:", profile_suffix)
             print("Address:", address)
+            self.profile_title= profile_title
+            self.profle_suffix= profile_suffix
+            self.address= address
 
-            self.profile_title.append(profile_title)
-            self.profle_suffix.append(profile_suffix)
-            self.address.append(address)
+
         except Exception as e:
             print("Error extracting profile heading data:", e)
 
@@ -145,33 +181,38 @@ class Scrapper:
             # Extract the text content
             text_content = soup.get_text(strip=True)
             print("Avalabilty Text:", text_content)
-            self.availablity.append(text_content)
+            self.availablity = text_content
 
         except Exception as e:
             print("Error:", e)
 
         try:
             # Extract paragraph text
+            WebDriverWait(self.driver, 10)
             span_element = self.driver.find_element(By.CLASS_NAME, 'paragraph')
             inner_html = span_element.get_attribute("innerHTML")
             paragraph_text = BeautifulSoup(inner_html, 'html.parser').get_text(strip=True)
             print("Paragraph:", paragraph_text)
-            self.bio.append(paragraph_text)
+            self.bio= paragraph_text
+
         except Exception:
             print("No paragraph found.")
 
         try:
             # Extract phone number
+            WebDriverWait(self.driver, 10)
             phone_element = self.driver.find_element(By.CLASS_NAME, 'lets-connect-phone-number')
             phone_href = phone_element.get_attribute("href")
             phone_number = re.search(r'\+?\(?\d{3}\)?\s?-?\d{3}-\d{4}', phone_href)
             print("Extracted Phone Number:", phone_number.group() if phone_number else "No phone number found.")
-            self.number.append(phone_number)
+            self.number= phone_number.group()
+
         except Exception:
             print("No phone number found.")
 
         try:
             # Find the element
+            WebDriverWait(self.driver, 10)
             element = self.driver.find_element(By.CLASS_NAME, "primary-details")
 
             # Get the inner HTML content
@@ -184,7 +225,8 @@ class Scrapper:
             text_content = soup.get_text(strip=True)  # `strip=True` removes leading/trailing spaces
 
             print("Licensed:", text_content)
-            self.license_number.append(text_content)
+            self.license_number= text_content
+
         except Exception as e:
             print("Nothing found:", e)
         try:
@@ -197,7 +239,7 @@ class Scrapper:
             # Get the image URL from the 'src' attribute
             image_url = image_element.get_attribute("src")
             print("Image URL:", image_url)
-            self.image_url.append(image_url)
+            self.image_url= image_url
 
         except Exception as e:
             print("Error:", e)
@@ -206,27 +248,26 @@ class Scrapper:
 
 
         try:
-            # Wait until the element with class 'client-focus-item' is present
-            wait = WebDriverWait(self.driver, 10)
+            WebDriverWait(self.driver, 10)
+
             text_content = self.extract_list_items("fees")
             print("Fees Text:", text_content)
-            self.fee.append(text_content)
-
+            self.fee= text_content
         except Exception as e:
             print("Error:", e)
-
-
-
 
         try:
             #using method as class name was unique
+            WebDriverWait(self.driver, 10)
 
             li = self.extract_list_items("insurance")
             print("Insurane Text:", li)
-            self.insurance.append(li)
+            self.insurance= li
+
         except Exception as e:
             print("Error:", e)
         try:
+            WebDriverWait(self.driver, 10)
 
             main_div = self.driver.find_element("id", "specialty-attributes-section")
 
@@ -247,13 +288,14 @@ class Scrapper:
             # Print the results
             print("Top Specialties:", specialties_list)
             print("Expertise:", expertise_list)
-            self.speciality.append(specialties_list)
-            self.expetise.append(expertise_list)
+            self.speciality= specialties_list
+            self.expetise = expertise_list
 
         except Exception as e:
             print("Error:", e)
 
         try:
+            WebDriverWait(self.driver, 10)
             main_div = self.driver.find_element("class name", "nearby-areas")
 
             # Get the outerHTML of the main div
@@ -283,13 +325,13 @@ class Scrapper:
 
                 print(f"{title}: {links}")
                 if i==1:
-                    self.cities.append(links)
+                    self.cities = links
                 if i==2:
-                    self.countries.append(links)
+                    self.countries= links
                 if i==3:
-                    self.zip.append(links)
+                    self.zip= links
                 if i==4:
-                    self.neighboor.append(links)
+                    self.neighboor= links
                 i+=1
 
         except:
@@ -299,7 +341,8 @@ class Scrapper:
 
         try:
 
-            self.driver.implicitly_wait(10)  # Adjust wait time based on page loading speed
+
+            WebDriverWait(self.driver,10)  # Adjust wait time based on page loading speed
 
             # Step 4: Get the HTML source of the page
             html = self.driver.page_source
@@ -346,20 +389,23 @@ class Scrapper:
             # Step 12: Print or use the extracted data
 
             print("Age:", age_list)
-            self.age.append(list(age_list))
+            self.age = list(age_list)
+
             print("Participants:", participants_list)
-            self.participants.append(list(participants_list))
+            self.participants= list(participants_list)
 
             print("I also speak:", speak_list)
             self.speak.append([speak_list])
             print("Ethnicity:", ethnicity_list)
-            self.ethentisy.append([ethnicity_list])
+            self.ethentisy= list(ethnicity_list)
+
+
         except:
             print("No Client")
 
         try:
             # Step 1: Wait for the page to load and get the HTML source
-            self.driver.implicitly_wait(10)  # Adjust wait time based on page loading speed
+            WebDriverWait(self.driver,10)  # Adjust wait time based on page loading speed
             html = self.driver.page_source
 
             # Step 2: Parse the HTML with BeautifulSoup
@@ -377,7 +423,16 @@ class Scrapper:
 
             # Step 6: Print the list of extracted therapies
             print("Therapy Ways:", therapy_list)
-            self.thrapy_Way.append(therapy_list)
+            self.thrapy_Way= therapy_list
+
+            #check to save only unique values
+            if self.number not in self.unique_index:
+                self.unique_index.append(self.number)
+                self.df.loc[len(self.df)] = [self.url_profile, self.profile_title, self.profle_suffix, self.address, self.availablity,
+                                             self.bio, self.number, self.license_number, self.image_url, self.fee,
+                                             self.insurance, self.expetise, self.speciality, self.cities, self.countries,
+                                             self.zip, self.neighboor, self.age, self.participants, self.ethentisy, self.thrapy_Way]
+
 
         except Exception as e:
             print("Error:", e)
@@ -419,91 +474,60 @@ class Scrapper:
             print("Scraping current page...")
             self.crawl_page()
 
+
             # Go to the next page, break if no more pages
             if not self.go_to_next_page():
                 break
 
         self.driver.quit()
 
-    def create_dataframe(self):
-        # Find the maximum length of all lists
-        max_length = max(len(lst) for lst in [
-            self.profile_title,
-            self.profle_suffix,
-            self.address,
-            self.availablity,
-            self.bio,
-            self.number,
-            self.image_url,
-            self.license_number,
-            self.fee,
-            self.insurance,
-            self.speciality,
-            self.expetise,
-            self.cities,
-            self.countries,
-            self.zip,
-            self.neighboor,
-            self.age,
-            self.ethentisy,
-            self.thrapy_Way,
-            self.speak,
-            self.participants,
-        ])
 
-        # Pad all lists with None to make them the same length
-        self.profile_title.extend([None] * (max_length - len(self.profile_title)))
-        self.profle_suffix.extend([None] * (max_length - len(self.profle_suffix)))
-        self.address.extend([None] * (max_length - len(self.address)))
-        self.availablity.extend([None] * (max_length - len(self.availablity)))
-        self.bio.extend([None] * (max_length - len(self.bio)))
-        self.number.extend([None] * (max_length - len(self.number)))
-        self.image_url.extend([None] * (max_length - len(self.image_url)))
-        self.license_number.extend([None] * (max_length - len(self.license_number)))
-        self.fee.extend([None] * (max_length - len(self.fee)))
-        self.insurance.extend([None] * (max_length - len(self.insurance)))
-        self.speciality.extend([None] * (max_length - len(self.speciality)))
-        self.expetise.extend([None] * (max_length - len(self.expetise)))
-        self.cities.extend([None] * (max_length - len(self.cities)))
-        self.countries.extend([None] * (max_length - len(self.countries)))
-        self.zip.extend([None] * (max_length - len(self.zip)))
-        self.neighboor.extend([None] * (max_length - len(self.neighboor)))
-        self.age.extend([None] * (max_length - len(self.age)))
-        self.ethentisy.extend([None] * (max_length - len(self.ethentisy)))
-        self.thrapy_Way.extend([None] * (max_length - len(self.thrapy_Way)))
-        self.speak.extend([None] * (max_length - len(self.speak)))
-        self.participants.extend([None] * (max_length - len(self.participants)))
 
-        # Create a dictionary where keys are column names and values are the padded lists
-        data = {
-            "profile_title": self.profile_title,
-            "profle_suffix": self.profle_suffix,
-            "address": self.address,
-            "availablity": self.availablity,
-            "bio": self.bio,
-            "number": self.number,
-            "image_url": self.image_url,
-            "license_number": self.license_number,
-            "fee": self.fee,
-            "insurance": self.insurance,
-            "speciality": self.speciality,
-            "expetise": self.expetise,
-            "cities": self.cities,
-            "countries": self.countries,
-            "zip": self.zip,
-            "neighboor": self.neighboor,
-            "age": self.age,
-            "ethentisy": self.ethentisy,
-            "thrapy_Way": self.thrapy_Way,
-            "speak": self.speak,
-            "participants": self.participants,
-        }
+    def print_attributes(self):
+        # Loop through all attributes of the class
+        for attr, value in self.__dict__.items():
+            # Print attribute name and its value
+            print(f"{attr}: {value}")
 
-        # Create a DataFrame using the dictionary
-        df = pd.DataFrame(data)
+    def save_to_csv(self):
+        for col in self.df.columns:
+            if self.df[col].apply(lambda x: isinstance(x, list)).any():
+                self.df[col] = self.df[col].apply(lambda x: str(x) if isinstance(x, list) else x)
+        self.df.set_index("number", inplace= True)
+        self.df = self.df[~self.df.index.duplicated(keep='first')]
+        self.df.replace("set()", "Not Presented")
+        self.df.reset_index(drop=False, inplace =True)
 
-        # Return the DataFrame
-        return df
+
+        output_path = "CSV Data Lake"
+        os.makedirs(output_path, exist_ok=True)
+
+        # Generate filename with current date and time
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f"data_{timestamp}.csv"
+        # Create the full path for the file
+        full_path = os.path.join(output_path, filename)
+
+        # Save the DataFrame as CSV
+        self.df.to_csv(full_path, index=False)
+        print(f"DataFrame saved at: {full_path}")
+
+    def save_to_json(self):
+        output_path = "Json Data Lake"
+        os.makedirs(output_path, exist_ok=True)
+
+        # Generate filename with current date and time
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f"data_{timestamp}.json"
+
+        # Create the full path for the file
+        full_path = os.path.join(output_path, filename)
+
+        # Save the DataFrame as a JSON file
+        self.df.to_json(path_or_buf=full_path, orient="index", indent=4, force_ascii=False)
+        print(f"DataFrame saved at: {full_path}")
+
+
 
 
 if __name__ == "__main__":
@@ -512,5 +536,5 @@ if __name__ == "__main__":
         obj.crawl()
     except:
         print("Finished")
-    df = obj.create_dataframe()
-    df.to_csv("File")
+    obj.save_to_csv()
+    obj.save_to_json()
