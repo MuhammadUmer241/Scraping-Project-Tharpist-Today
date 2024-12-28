@@ -117,7 +117,7 @@ class Scrapper:
 
             link.click()  # Click the link to open the modal/popup
             print("Profile Status".center(50, "-"))
-            self.url_profile = url
+            self.url_profile.append(url)
             print(self.url_profile)
 
 
@@ -134,7 +134,7 @@ class Scrapper:
             close_button = WebDriverWait(self.driver, 10).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.details-nav.details-close .icon-close'))
             )
-            time.sleep(20)
+            time.sleep(3)
             close_button.click()
 
 
@@ -579,5 +579,7 @@ if __name__ == "__main__":
         obj.crawl()
     except:
         print("Finished")
+
+    obj.df["url"] = obj.url_profile[:len(obj.df)]
     obj.save_to_csv()
     obj.save_to_json()

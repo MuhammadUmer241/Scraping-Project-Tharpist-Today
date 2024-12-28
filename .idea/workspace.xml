@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1dcfaf05-5bcd-49ef-8f8c-2f3301a888c6" name="Changes" comment="Qualification and Education Scrape">
+    <list default="true" id="1dcfaf05-5bcd-49ef-8f8c-2f3301a888c6" name="Changes" comment="Refactor the code">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scrapper.py" beforeDir="false" afterPath="$PROJECT_DIR$/scrapper.py" afterDir="false" />
     </list>
@@ -182,7 +182,23 @@
       <option name="project" value="LOCAL" />
       <updated>1735289540655</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Qualification and Education Scrape">
+      <option name="closed" value="true" />
+      <created>1735338021096</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1735338021096</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Refactor the code">
+      <option name="closed" value="true" />
+      <created>1735338214312</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1735338214312</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -202,6 +218,7 @@
     <MESSAGE value="Scraped Everything and Version1 of Creating Data Frame" />
     <MESSAGE value="CSV and Json Save" />
     <MESSAGE value="Qualification and Education Scrape" />
-    <option name="LAST_COMMIT_MESSAGE" value="Qualification and Education Scrape" />
+    <MESSAGE value="Refactor the code" />
+    <option name="LAST_COMMIT_MESSAGE" value="Refactor the code" />
   </component>
 </project>
