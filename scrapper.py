@@ -580,52 +580,18 @@ if __name__ == "__main__":
     except:
         print("Finished")
 
-    obj.df["url"] = obj.url_profile[:len(obj.df)]
+
+    def find_url(profile_title, url_list):
+        for url in url_list:
+            if profile_title.lower().replace(" ", "-") in url.lower():
+                return url
+        return None  # Return None if no matching URL is found
 
 
-    # Define a function to find the best match
-    # Function to find the best match
-    def find_best_match(url, titles):
-        # Check if any title is directly contained in the URL
-        for title in titles:
-            if title.split()[0].lower() in url.lower():  # Matching by first name
-                return title
-        return None  # Return None if no match is found
+    # Apply the function to create a new 'url' column
+    obj.df["url"] = obj.df["profile_title"].apply(lambda title: find_url(title, obj.url_profile))
 
 
-    # Function to replace mismatched URLs based on the corrected title
-    def update_url(row):
-        if row["correct_title"] is not None and row["profile_title"] != row["correct_title"]:
-            # Generate a new URL based on the corrected title
-            return f"profile_url_for_{row['correct_title'].split()[0].lower()}"
-        return row["url"]  # Keep the existing URL if it's already correct
-
-
-    # Function to drop rows where URLs still don't match after correction
-    def drop_mismatched_rows(df):
-        # Filter rows where 'profile_title' matches the updated 'url'
-        df = df[df["profile_title"] == df["correct_title"]]
-        return df.drop(columns=["correct_title"])  # Drop the temporary column
-
-
-    # Main logic to process the DataFrame
-    def process_dataframe(obj):
-        # Create a new column to store corrected titles based on the URLs
-        obj.df["correct_title"] = obj.df["url"].apply(lambda url: find_best_match(url, obj.df["profile_title"]))
-
-        # Apply the URL correction logic
-        obj.df["url"] = obj.df.apply(update_url, axis=1)
-
-        # Drop rows where URLs still don't match after correction
-        obj.df = drop_mismatched_rows(obj.df)
-
-        # Return the cleaned DataFrame
-        return obj.df
-
-
-    # Example usage:
-    # Assuming obj.df has 'profile_title' and 'url' columns
-    obj.df = process_dataframe(obj)
     obj.save_to_csv()
     obj.save_to_json()
 
