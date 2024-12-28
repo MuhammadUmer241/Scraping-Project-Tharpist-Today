@@ -7,7 +7,6 @@ How to Clone the Repository
 To clone the repository to your local machine, run the following command in your terminal:
 
 ```
-Copy code
 git clone https://github.com/MuhammadUmer241/Scraping-Project-Tharpist-Today.git
 ```
 ```
@@ -26,13 +25,12 @@ source venv/bin/activate  # On macOS/Linux
 ```
 venv\Scripts\activate     # On Windows  
 ```
-```
-Install Required Dependencies
-```
-## After activating the virtual environment, install the required Python packages by running:
+
+## Install Required Dependencies
+
+### After activating the virtual environment, install the required Python packages by running:
 
 ```
-Copy code
 pip install -r requirements.txt
 ```
 ## Running the Scraper
@@ -44,8 +42,13 @@ Copy code
 python scrapper.py
 ```
 # Important Notes
-Duplications While Printing: While running the script, you may notice some duplication in the printed output logs. This is due to how the scraper handles repetitive pages or elements. However, the saved data in the output files will not contain any duplicates, ensuring clean and accurate results.
+- Duplications While Printing: While running the script, you may notice some duplication in the printed output logs. This is due to how the scraper handles repetitive pages or elements. However, the saved data in the output files will not contain any duplicates, ensuring clean and accurate results.
 Make sure the virtual environment is activated before running the script to avoid dependency issues.
+
+
+
+
+
 Here's an assessment of your code based on the requirements provided, marked with ✔ (implemented) or ❌ (not implemented):
 
 ### **Basic Info**
