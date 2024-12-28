@@ -34,11 +34,10 @@ venv\Scripts\activate     # On Windows
 pip install -r requirements.txt
 ```
 ## Running the Scraper
+
+### After setting up the environment, simply run the scrapper.py script:
+
 ```
-After setting up the environment, simply run the scrapper.py script:
-```
-```
-Copy code
 python scrapper.py
 ```
 # Important Notes
