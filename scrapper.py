@@ -18,7 +18,8 @@ import os
 '''
 
 class Scrapper:
-    def __init__(self,url = "https://www.psychologytoday.com/us/therapists?search=ontario"):
+    def __init__(self,url = "https://www.psychologytoday.com/ca/therapists?search=ontario"):
+    # def __init__(self,url = "https://www.psychologytoday.com/ca/therapists/ontario?page=445"):
         self.license_number= []
         self.fee= []
         self.insurance= []
@@ -342,11 +343,11 @@ class Scrapper:
                 if i==1:
                     self.cities = links
                 if i==2:
-                    self.countries= links
-                if i==3:
                     self.zip= links
-                if i==4:
+                if i==3:
                     self.neighboor= links
+                if i==4:
+                    self.countries= links
                 i+=1
 
         except:
