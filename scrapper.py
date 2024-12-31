@@ -179,7 +179,7 @@ class Scrapper:
             # Wait until the element with the given class name is present
             wait = WebDriverWait(self.driver, 10)
             element = wait.until(
-                EC.presence_of_element_located((By.CLASS_NAME, "at-a-glance_row--appointments-online"))
+                EC.presence_of_element_located((By.CLASS_NAME, "at-a-glance_row_appointments"))
             )
 
             # Get the inner HTML of the element
