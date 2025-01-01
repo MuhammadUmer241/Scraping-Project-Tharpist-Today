@@ -284,6 +284,7 @@ class Scrapper:
             self.insurance= li
 
         except Exception as e:
+            self.insurance= []
             print("No Insurance Secrtion")
         try:
             WebDriverWait(self.driver, 10)
