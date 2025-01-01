@@ -1,6 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.ie.webdriver import WebDriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -108,7 +109,6 @@ class Scrapper:
                 crawler.crawl()
             """
 
-
         profile_links = self.driver.find_elements(By.CLASS_NAME, 'profile-title')
 
 
@@ -118,8 +118,8 @@ class Scrapper:
 
             link.click()  # Click the link to open the modal/popup
             print("Profile Status".center(50, "-"))
-            self.url_profile.append(url)
-            print(self.url_profile)
+            self.url_profile = url
+            print(url)
 
 
             elements = self.driver.find_elements(By.CLASS_NAME, "profile-heading-content")
@@ -129,7 +129,7 @@ class Scrapper:
 
 
             # Extract data from the modal/popup
-            self.extract_profile_data()
+            self.extract_profile_data(url)
 
             # Close the modal/popup after extracting the data
             close_button = WebDriverWait(self.driver, 10).until(
@@ -142,20 +142,22 @@ class Scrapper:
 
 
 
-    def extract_profile_data(self):
+    def extract_profile_data(self, url):
         """
         Extracts and prints the data from an open profile modal/popup.
         """
-
+        driver = webdriver.Chrome()
+        driver.get(url)
 
         try:
             # Extract main content from the modal
 
             WebDriverWait(self.driver,10)
 
-            div_element = self.driver.find_element(By.CLASS_NAME, "profile-heading-content")
+            div_element = driver.find_element(By.CLASS_NAME, "profile-heading-content")
             inner_html = div_element.get_attribute("innerHTML")
             soup = BeautifulSoup(inner_html, 'html.parser')
+
 
             # Extract the desired text
             profile_title = soup.find("h1", class_="profile-title").get_text(strip=True)
@@ -173,11 +175,13 @@ class Scrapper:
         except Exception as e:
             print("Error extracting profile heading data:", e)
 
+
+
         try:
 
 
             # Wait until the element with the given class name is present
-            wait = WebDriverWait(self.driver, 10)
+            wait = WebDriverWait(driver, 10)
             element = wait.until(
                 EC.presence_of_element_located((By.CLASS_NAME, "at-a-glance_row_appointments"))
             )
@@ -199,8 +203,8 @@ class Scrapper:
         try:
 
             # Extract paragraph text
-            WebDriverWait(self.driver, 10)
-            span_element = self.driver.find_element(By.CLASS_NAME, 'paragraph')
+            WebDriverWait(driver, 10)
+            span_element = driver.find_element(By.CLASS_NAME, 'paragraph')
             inner_html = span_element.get_attribute("innerHTML")
             paragraph_text = BeautifulSoup(inner_html, 'html.parser').get_text(strip=True)
             print("Paragraph:", paragraph_text)
@@ -212,8 +216,8 @@ class Scrapper:
         try:
 
             # Extract phone number
-            WebDriverWait(self.driver, 10)
-            phone_element = self.driver.find_element(By.CLASS_NAME, 'lets-connect-phone-number')
+            WebDriverWait(driver, 10)
+            phone_element = driver.find_element(By.CLASS_NAME, 'lets-connect-phone-number')
             phone_href = phone_element.get_attribute("href")
             phone_number = re.search(r'\+?\(?\d{3}\)?\s?-?\d{3}-\d{4}', phone_href)
             print("Extracted Phone Number:", phone_number.group() if phone_number else "No phone number found.")
@@ -225,8 +229,8 @@ class Scrapper:
         try:
 
             # Find the element
-            WebDriverWait(self.driver, 10)
-            element = self.driver.find_element(By.CLASS_NAME, "primary-details")
+            WebDriverWait(driver, 10)
+            element = driver.find_element(By.CLASS_NAME, "primary-details")
 
             # Get the inner HTML content
             inner_html = element.get_attribute("innerHTML")
@@ -245,7 +249,7 @@ class Scrapper:
         try:
 
             # Wait until the element with class 'profile-photo clickable' is visible
-            wait = WebDriverWait(self.driver, 10)
+            wait = WebDriverWait(driver, 10)
             image_element = wait.until(
                 EC.presence_of_element_located((By.CLASS_NAME, "profile-photo.clickable"))
             )
@@ -263,9 +267,9 @@ class Scrapper:
 
         try:
 
-            WebDriverWait(self.driver, 10)
+            WebDriverWait(driver, 10)
 
-            text_content = self.extract_list_items("fees")
+            text_content = self.extract_list_items("fees", driver)
             print("Fees Text:", text_content)
             self.fee= text_content
         except Exception as e:
@@ -276,43 +280,64 @@ class Scrapper:
             #using method as class name was unique
             WebDriverWait(self.driver, 10)
 
-            li = self.extract_list_items("insurance")
+            li = self.extract_list_items("insurance", driver)
             print("Insurane Text:", li)
             self.insurance= li
 
         except Exception as e:
-            print("Error:", e)
+            print("No Insurance Secrtion")
         try:
             WebDriverWait(self.driver, 10)
+            html = driver.page_source
 
-            main_div = self.driver.find_element("id", "specialty-attributes-section")
+            soup = BeautifulSoup(html, 'html.parser')
 
-            # Get the outerHTML of the main div
-            html = main_div.get_attribute("outerHTML")
+            # Find all h3 tags with the main class
+            h3_tags = soup.find_all('h3', class_="heading-element heading-element-4 attributes-group-title")
 
-            # Parse the HTML with BeautifulSoup
-            soup = BeautifulSoup(html, "html.parser")
+            # Initialize separate lists for Expertise and Specialty
+            expertise_list = []
+            specialty_list = []
+            therapy_way = []
 
-            # Extract "Top Specialties" <li> items
-            specialties_group = soup.find('h3', string="Top Specialties").find_next('ul')
-            specialties_list = [li.get_text(strip=True) for li in specialties_group.find_all('li')]
+            # Loop through the h3 tags and process each section
+            for h3 in h3_tags:
+                section_title = h3.get_text(strip=True)  # Extract the section title (e.g., "Expertise" or "Specialty")
 
-            # Extract "Expertise" <li> items
-            expertise_group = soup.find('h3', string="Expertise").find_next('ul')
-            expertise_list = [li.get_text(strip=True) for li in expertise_group.find_all('li')]
+                # Locate the associated ul element with class "section-list"
+                ul = h3.find_next('ul', class_='section-list')
+
+                # Extract all li elements within the ul
+                if ul:
+                    items = ul.find_all('li')
+                    item_texts = [item.get_text(strip=True) for item in items]
+
+                    # Differentiate between "Expertise" and "Specialty"
+                    if section_title == "Expertise":
+                        expertise_list.extend(item_texts)
+                    elif section_title == "Top Specialties":
+                        specialty_list.extend(item_texts)
+                    elif section_title=="Types of Therapy":
+                        therapy_way.extend(item_texts)
 
             # Print the results
-            print("Top Specialties:", specialties_list)
-            print("Expertise:", expertise_list)
-            self.speciality= specialties_list
+            print("Expertise Section:", expertise_list)
+            print("Specialty Section:", specialty_list)
+            print("Therapy Section:", therapy_way)
+
+            # Print the results
+            # print("Top Specialties:", specialties_list)
+            # print("Expertise:", expertise_list)
+            self.speciality= specialty_list
             self.expetise = expertise_list
+            self.thrapy_Way = therapy_way
 
         except Exception as e:
             print("Error:", e)
 
         try:
-            WebDriverWait(self.driver, 10)
-            main_div = self.driver.find_element("class name", "nearby-areas")
+            WebDriverWait(driver, 10)
+            main_div = driver.find_element("class name", "nearby-areas")
 
             # Get the outerHTML of the main div
             html = main_div.get_attribute("outerHTML")
@@ -358,100 +383,79 @@ class Scrapper:
         try:
 
 
-            WebDriverWait(self.driver,10)  # Adjust wait time based on page loading speed
+            WebDriverWait(driver,10)  # Adjust wait time based on page loading speed
 
             # Step 4: Get the HTML source of the page
-            html = self.driver.page_source
+            html = driver.page_source
 
             # Step 5: Use BeautifulSoup to parse the HTML
             soup = BeautifulSoup(html, 'html.parser')
 
+
             # Step 6: Initialize lists to store extracted values
+            part_list = set()
+            ethn_list = set()
             age_list = set()
-            participants_list = set()
             speak_list = set()
-            ethnicity_list = set()
 
             # Step 7: Extract Age section
-            age_section = soup.find_all('h3', string="Age")
-            for section in age_section:
-                items = section.find_next('div').find_all('span', class_='client-focus-description')
-                for item in items:
-                    age_list.add(item.text.strip())
+            soup = BeautifulSoup(html, 'html.parser')
 
-            # Step 8: Extract Participants section
-            participants_section = soup.find_all('h3', string="Participants")
-            for section in participants_section:
-                items = section.find_next('div').find_all('span', class_='client-focus-description')
-                for item in items:
-                    participants_list.add(item.text.strip())
+            # Find all h3 tags with the common class
+            h3_tags = soup.find_all('h3', class_="heading-element heading-element-4 client-focus-group-title")
 
-            # Step 9: Extract "I also speak" section
-            speak_section = soup.find_all('h3', string="I also speak")
-            for section in speak_section:
-                items = section.find_next('div').find_all('span', class_='client-focus-description')
-                for item in items:
-                    speak_list.add(item.text.strip())
+            # Loop through the h3 tags and differentiate based on inner text
+            for h3 in h3_tags:
+                section_title = h3.get_text(strip=True)  # Extract the text (e.g., "Age" or "I also speak")
 
-            # Step 10: Extract Ethnicity section
-            ethnicity_section = soup.find_all('h3', string="Ethnicity")
-            for section in ethnicity_section:
-                items = section.find_next('div').find_all('span', class_='client-focus-description')
-                for item in items:
-                    ethnicity_list.add(item.text.strip())
+                # Locate the parent client-focus-tile div
+                parent_div = h3.find_parent('div', class_='client-focus-tile')
 
-            # Step 11: Close the browser after scraping
+                # Extract all relevant items within the parent div
+                if section_title == "Age":
+                    age_items = parent_div.find_all('span', class_='client-focus-description')
+                    age_list = [item.get_text(strip=True) for item in age_items]
 
-            # Step 12: Print or use the extracted data
 
-            print("Age:", age_list)
-            self.age = list(age_list)
+                elif section_title == "I also speak":
+                    speak_items = parent_div.find_all('span', class_='client-focus-description')
+                    speak_list = [item.get_text(strip=True) for item in speak_items]
 
-            print("Participants:", participants_list)
-            self.participants= list(participants_list)
 
-            print("I also speak:", speak_list)
-            self.speak.append([speak_list])
-            print("Ethnicity:", ethnicity_list)
-            self.ethentisy= list(ethnicity_list)
+                elif section_title == "Participants":
+                    part_items = parent_div.find_all('span', class_='client-focus-description')
+                    part_list = [item.get_text(strip=True) for item in part_items]
 
+                elif section_title == "Ethnicity":
+                    ethn_items = parent_div.find_all('span', class_='client-focus-description')
+                    ethn_list = [item.get_text(strip=True) for item in ethn_items]
+
+
+
+
+
+
+
+            self.age = age_list
+            print("Age Section:", self.age)
+
+            self.participants= part_list
+            print("Participate:", self.participants)
+
+            # print("I also speak:", speak_list)
+            self.speak = speak_list
+            print("I also speak Section:", self.speak)
+
+            self.ethentisy= ethn_list
+            print("Ethenticity:", self.ethentisy)
 
         except:
             print("No Client")
 
         try:
-            # Step 1: Wait for the page to load and get the HTML source
-            WebDriverWait(self.driver,10)  # Adjust wait time based on page loading speed
-            html = self.driver.page_source
-
-            # Step 2: Parse the HTML with BeautifulSoup
-            soup = BeautifulSoup(html, 'html.parser')
-
-            # Step 3: Find the div with the specific id
-            treatment_section = soup.find('div', {'id': 'treatment-approach-attributes-section'})
-
-            # Step 4: Find the 'Types of Therapy' section by checking the heading
-            therapy_group = treatment_section.find('h3', string="Types of Therapy").find_next('ul',
-                                                                                              class_='section-list')
-
-            # Step 5: Extract all li elements and their text
-            therapy_list = [li.get_text(strip=True) for li in therapy_group.find_all('li')]
-
-            # Step 6: Print the list of extracted therapies
-            print("Therapy Ways:", therapy_list)
-            self.thrapy_Way= therapy_list
-
-
-            #check to save only unique values
-
-
-
-        except Exception as e:
-            print("Error:", e)
-        try:
 
             # Step 2: Locate the main div and its elements
-            qualifications_div = self.driver.find_element(By.CLASS_NAME, "qualifications")
+            qualifications_div = driver.find_element(By.CLASS_NAME, "qualifications")
             qualification_elements = qualifications_div.find_elements(By.CLASS_NAME, "qualifications-element")
 
             # Step 3: Extract the inner HTML of each element
@@ -476,13 +480,13 @@ class Scrapper:
                                              self.bio, self.number, self.license_number, self.image_url, self.fee,
                                              self.insurance, self.expetise, self.speciality, self.cities, self.countries,
                                              self.zip, self.neighboor, self.age, self.participants, self.ethentisy, self.thrapy_Way, self.education]
-
+            driver.quit()
         except:
             print("No Qualification found ")
 
-    def extract_list_items(self, class_name):
+    def extract_list_items(self, class_name,driver):
         # Find the insurance section using Selenium
-        insurance_section = self.driver.find_element("class name", class_name)
+        insurance_section = driver.find_element("class name", class_name)
 
         # Pass the inner HTML of the section to BeautifulSoup
         soup = BeautifulSoup(insurance_section.get_attribute('outerHTML'), 'html.parser')
@@ -580,18 +584,6 @@ if __name__ == "__main__":
         obj.crawl()
     except:
         print("Finished")
-
-
-    def find_url(profile_title, url_list):
-        for url in url_list:
-            if profile_title.lower().replace(" ", "-") in url.lower():
-                return url
-        return None  # Return None if no matching URL is found
-
-
-    # Apply the function to create a new 'url' column
-    obj.df["url"] = obj.df["profile_title"].apply(lambda title: find_url(title, obj.url_profile))
-
 
     obj.save_to_csv()
     obj.save_to_json()
