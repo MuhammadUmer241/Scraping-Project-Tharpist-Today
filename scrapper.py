@@ -40,7 +40,7 @@ class Scrapper:
         self.cities= []
         self.countries = []
         self.zip = []
-        self.neighboor = []
+
         self.age = []
         self.ethentisy= []
         self.thrapy_Way = []
@@ -66,7 +66,6 @@ class Scrapper:
             "cities",
             "countries",
             "zip",
-            "neighboor",
             "age",
             "participants",
             "ethentisy",
@@ -479,7 +478,7 @@ class Scrapper:
                 self.df.loc[len(self.df)] = [self.url_profile, self.profile_title, self.profle_suffix, self.address, self.availablity,
                                              self.bio, self.number, self.license_number, self.image_url, self.fee,
                                              self.insurance, self.expetise, self.speciality, self.cities, self.countries,
-                                             self.zip, self.neighboor, self.age, self.participants, self.ethentisy, self.thrapy_Way, self.education]
+                                             self.zip, self.age, self.participants, self.ethentisy, self.thrapy_Way, self.education]
             driver.quit()
         except:
             print("No Qualification found ")
